@@ -110,6 +110,8 @@ public class SystemConfig {
     // property for runtime configuration differentiation in vendor
     private static final String VENDOR_SKU_PROPERTY = "ro.boot.product.vendor.sku";
 
+    private static final String ESIM_ENABLED_PROPERTY = "persist.sys.jcao.esim";
+
     // property for runtime configuration differentation in product
     private static final String PRODUCT_SKU_PROPERTY = "ro.boot.hardware.sku";
 
@@ -721,6 +723,14 @@ public class SystemConfig {
         // This only needs to happen once.
         for (String featureName : mUnavailableFeatures) {
             removeFeature(featureName);
+        }
+
+        // eSIM is opt-in on this ROM: the user switches it on from Settings or JcaoParts,
+        // which sets persist.sys.jcao.esim and reboots.
+        if (SystemProperties.getBoolean(ESIM_ENABLED_PROPERTY, false)) {
+            addFeature(PackageManager.FEATURE_TELEPHONY_EUICC, 0);
+        } else {
+            removeFeature(PackageManager.FEATURE_TELEPHONY_EUICC);
         }
     }
 
