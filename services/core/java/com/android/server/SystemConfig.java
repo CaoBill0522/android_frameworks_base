@@ -111,6 +111,9 @@ public class SystemConfig {
     private static final String VENDOR_SKU_PROPERTY = "ro.boot.product.vendor.sku";
 
     private static final String ESIM_ENABLED_PROPERTY = "persist.sys.jcao.esim";
+    private static final String HARDWARE_SKU_PROPERTY = "ro.boot.product.hardware.sku";
+    // diting global (Xiaomi 12T Pro): SIM 2 and the eUICC share one slot behind a GPIO
+    private static final Set<String> BUILTIN_EUICC_SKUS = Set.of("ditingp");
 
     // property for runtime configuration differentation in product
     private static final String PRODUCT_SKU_PROPERTY = "ro.boot.hardware.sku";
@@ -725,9 +728,11 @@ public class SystemConfig {
             removeFeature(featureName);
         }
 
-        // eSIM is opt-in on this ROM: the user switches it on from Settings or JcaoParts,
-        // which sets persist.sys.jcao.esim and reboots.
-        if (SystemProperties.getBoolean(ESIM_ENABLED_PROPERTY, false)) {
+        // Boards with a built-in eUICC always declare it; the eSIM switch only routes the
+        // shared slot at runtime. Elsewhere eSIM is opt-in from JcaoParts, which sets
+        // persist.sys.jcao.esim and reboots.
+        if (BUILTIN_EUICC_SKUS.contains(SystemProperties.get(HARDWARE_SKU_PROPERTY))
+                || SystemProperties.getBoolean(ESIM_ENABLED_PROPERTY, false)) {
             addFeature(PackageManager.FEATURE_TELEPHONY_EUICC, 0);
         } else {
             removeFeature(PackageManager.FEATURE_TELEPHONY_EUICC);
